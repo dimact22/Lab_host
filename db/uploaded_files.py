@@ -92,25 +92,24 @@ def delete_file(file_id):
 
 
 def userFiles(name: str):
-
     files = fs.find({"user_name": name})
-
-    # Если файлов не найдено, возвращаем пустой список
-    if files.count() == 0:
-        return {"files": []}
 
     # Создаем список для хранения информации о файлах
     user_files = []
+
+    # Проходим по курсору, чтобы собрать информацию о файлах
     for file in files:
         file_info = {
             "file_id": str(file._id),
             "filename": file.filename,
             "length": file.length,
-            "upload_date": file.uploadDate,
-            "md5": file.md5,
-            "chunkSize": file.chunkSize
+            "upload_date": file.uploadDate
         }
         user_files.append(file_info)
+
+    # Если файлов не найдено, возвращаем пустой список
+    if not user_files:
+        return {"files": []}
 
     return {"files": user_files}
 
@@ -119,9 +118,17 @@ def getFile(file_id: str):
     # Получаем файл из GridFS
     file_data = fs.get(ObjectId(file_id))
 
-    # Создаем потоковый ответ
+    # Создаем генератор для чтения файла по частям (например, по 4KB)
+    def iter_file(file_data):
+        while True:
+            data = file_data.read(4096)  # Чтение по 4KB
+            if not data:
+                break
+            yield data
+
+    # Создаем потоковый ответ с использованием генератора
     response = StreamingResponse(
-        file_data,
+        iter_file(file_data),
         media_type="application/octet-stream",
         headers={"Content-Disposition": f"attachment; filename={file_data.filename}"}
     )
