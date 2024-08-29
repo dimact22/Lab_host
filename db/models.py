@@ -4,7 +4,8 @@ def user_serializer(user) -> dict:
         'name': user["name"],
         'email': user["email"],
         'phone': user["phone"],
-        "password": user["password"]    
+        "password": user["password"],
+        "ort": user["ort"]    
         
     }
 
