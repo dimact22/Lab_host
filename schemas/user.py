@@ -8,6 +8,7 @@ class User(BaseModel):
     email: EmailStr
     phone: str = Field(...)
     password: str = Field(..., min_length=6, max_length=30)
+    ort: str
 
     @validator('password')
     def password_complexity(cls, value):
