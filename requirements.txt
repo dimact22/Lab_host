@@ -9,3 +9,4 @@ pyjwt
 pydantic[email]
 python-multipart
 jinja2
+reportlab
