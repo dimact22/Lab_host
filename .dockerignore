@@ -1,0 +1,17 @@
+
+# Ignoriere allgemeine temporäre Dateien und Verzeichnisse
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.vscode
+.idea
+.git
+
+# Ignoriere lokale Konfigurationsdateien und Umgebungsvariablen
+.env
+.env.*
+config.ini
+
+# Ignoriere Editor-spezifische Dateien
+.DS_Store
