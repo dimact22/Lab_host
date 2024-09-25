@@ -1,84 +1,65 @@
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, validator, constr
 from fastapi import HTTPException, status
 import re
 
+def validate_password(value: str) -> str:
+    """Validate password complexity."""
+    if not re.search(r'[A-Z]', value):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one uppercase letter'
+        )
+    if not re.search(r'[a-z]', value):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one lowercase letter'
+        )
+    if not re.search(r'[0-9]', value):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one digit'
+        )
+    if not re.search(r'[@$!%*?&#]', value):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one special character'
+        )
+    return value
 
 class User(BaseModel):
+    """Model for user registration."""
     name: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
+    email: EmailStr  # Automatically validates the email format
     password: str = Field(..., min_length=6, max_length=30)
     ort: str = Field(..., min_length=2, max_length=100) 
 
     @validator('password')
-    def password_complexity(cls, value):
-        if not re.search(r'[A-Z]', value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one uppercase letter'
-            )
-        if not re.search(r'[a-z]', value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one lowercase letter'
-            )
-        if not re.search(r'[0-9]', value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one digit'
-            )
-        if not re.search(r'[@$!%*?&#]', value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Password must contain at least one special character'
-            )
-        return value
-
-    @validator('email')
-    def email_valid(cls, value):
-        pattern = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-        if not pattern.match(value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid email address'
-            )
-        return value
-
-    @validator('name')
-    def name_length(cls, value):
-        if len(value) < 3:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Name must be at least 3 characters long'
-            )
-        return value
+    def check_password_complexity(cls, value):
+        return validate_password(value)
 
 class UserLogin(BaseModel):
-    email: str
-    password: str
+    """Model for user login."""
+    email: EmailStr  # Automatically validates the email format
+    password: str = Field(..., min_length=6, max_length=30)
 
+    @validator('password')
+    def check_password_complexity(cls, value):
+        return validate_password(value)
 
 class DeleteUser(BaseModel):
-    email: str
+    """Model for deleting a user."""
+    email: EmailStr  # Automatically validates the email format
 
 class PdfFile(BaseModel):
+    """Model for PDF file creation."""
     name: str
     date: str
-    nat: str
-
+    nat: str  # nationality
 
 class ChangeUser(BaseModel):
+    """Model for changing user details."""
     name: str
-    phone: str = Field(...)
 
     @validator('name')
-    def name_length(cls, value):
+    def check_name_length(cls, value):
         if len(value) < 3:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail='Name must be at least 3 characters long'
-            )
-        return value
-
-    @validator('phone')
-    def phone_valid(cls, value):
-        pattern = re.compile(
-            r"^(?:\+?49|0)(?:\d{2}\)?[ -]?\d{2}[ -]?\d{7,8}|\(?\d{3}\)?[ -]?\d{3}[ -]?\d{4})$")
-        if not pattern.match(value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid phone number. It must be in one of the following formats: '
-                '+49 30 12345678, 030 12345678, 030-12345678, or (030) 12345678'
             )
         return value

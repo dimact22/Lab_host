@@ -6,37 +6,36 @@ from fastapi import HTTPException
 from pymongo.errors import PyMongoError
 import os
 
-
-
-def pdf_creations(nameFile, Name, date, nat):
+def pdf_creations(nameFile, Name, date, nat, email):
     try:
+        # Create a directory for PDFs if it doesn't exist
         if not os.path.exists("pdf_files"):
             os.makedirs("pdf_files")
+        
+        # Set up the file path
         file_name = f"{nameFile}.pdf"
         directory = "pdf_files"
-        print(os.getcwd())
         full_path = os.path.join(os.getcwd(), directory, file_name)
-        print(full_path)
+        
+        # Create the PDF document
         doc = SimpleDocTemplate(full_path, pagesize=A4)
-        document_title = "TEST_PDF"
         styles = getSampleStyleSheet()
         normal_style = styles["Normal"]
         title_style = styles["Title"]
 
-        
         elements = []
 
-    
+        # Add title to the PDF
         title = Paragraph("Nachweis für die Anerkennung der Staatenlosigkeit", title_style)
         elements.append(title)
         elements.append(Spacer(1, 12))
 
-        
+        # Add subtitle
         subtitle = Paragraph(f"von {Name}", normal_style)
         elements.append(subtitle)
         elements.append(Spacer(1, 24))
 
-        
+        # Add main text
         main_text = f"""
         Die folgenden Informationen wurden nach den Bestimmungen des Übereinkommens über die
         Rechtsstellung von Staatenlosen und völkerrechtlichen Standards erhoben.
@@ -45,7 +44,8 @@ def pdf_creations(nameFile, Name, date, nat):
         paragraph = Paragraph(main_text, normal_style)
         elements.append(paragraph)
         elements.append(Spacer(1, 24))
-        
+
+        # Additional main text
         main_text = f"""
         Ich, {Name}, stelle einen Antrag auf Zuerkennung internationalen Schutzes (Rechtsstellung der
         Staatenlosen gemäß Art. 1 des Übereinkommens über die Rechtsstellung von Staatenlosen, in
@@ -55,27 +55,29 @@ def pdf_creations(nameFile, Name, date, nat):
         paragraph = Paragraph(main_text, normal_style)
         elements.append(paragraph)
         elements.append(Spacer(1, 24))
-        
+
+        # Add personal details
         name_field = Paragraph(f"Name: {Name}", normal_style)
         birthday_field = Paragraph(f"Birthday: {date}", normal_style)
         nationality_field = Paragraph(f"Nationality: {nat}", normal_style)
-
         elements.extend([name_field, Spacer(1, 12), birthday_field, Spacer(1, 12), nationality_field])
 
-        
+        # Build the PDF
         doc.build(elements)
 
+        # Save the PDF file to the database
         try:
-            save_file(full_path, f"{nameFile}.pdf", "dima")
+            save_file(full_path, file_name, email)
             if os.path.exists(full_path):
-                os.remove(full_path)
+                os.remove(full_path)  # Remove the file after saving to the database
         except PyMongoError as e:
-            raise HTTPException(status_code=404, detail=f"Some error with database'{str(e)}'")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
         except FileNotFoundError as e:
-            raise HTTPException(status_code=404, detail=f"File system error: file not found -'{str(e)}'")
+            raise HTTPException(status_code=404, detail=f"File not found: {str(e)}")
         except PermissionError as e:
-            raise HTTPException(status_code=404, detail=f"Access error: not enough permissions -'{str(e)}'")
+            raise HTTPException(status_code=403, detail=f"Permission denied: {str(e)}")
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Some error'{str(e)}'")
+            raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
     except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Some error'{str(e)}'")
+        raise HTTPException(status_code=500, detail=f"Failed to create PDF: {str(e)}")

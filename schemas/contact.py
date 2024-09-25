@@ -1,18 +1,20 @@
-from pydantic import BaseModel, Field, validator, EmailStr
-from fastapi import FastAPI, HTTPException, status
-import re
-
+from pydantic import BaseModel, Field, EmailStr, constr
+from fastapi import HTTPException, status
 
 class ContactForm(BaseModel):
-    email: EmailStr
+    email: EmailStr  # Automatically validates the email format
     message: str
 
-    @validator('email')
-    def email_valid(cls, value):
-        pattern = re.compile(
-            r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-        if not pattern.match(value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid email address'
-            )
-        return value
+    # Optionally, you can add a subject field
+    # subject: str = Field(default="No Subject")  
+
+    # If you still want a custom validator for demonstration purposes:
+    # @validator('message')
+    # def check_message_length(cls, value):
+    #     if len(value) < 10:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail='Message must be at least 10 characters long'
+    #         )
+    #     return value
+
