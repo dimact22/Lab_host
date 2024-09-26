@@ -56,32 +56,6 @@ on macOS/Linux
 2. Access Swagger UI:
 
 Open your browser and navigate to http://localhost:8000/docs to access the Swagger UI documentation.
-
-## Endpoints
-
-1. Register User
-
-`URL: /user/register`
-
-Method: POST
-
-2. Login User
-
- ` URL: /user/login`
-
-Method: POST
-
-3. Get User Details
-
-`URL: /user/{user_id}`
-
- Method: GET
-
-Headers:
-
-Authorization: Bearer token for authentication.
-
- Response: The user's details excluding the password.
 ## Tools and Technologies
 ### MongoDB
 
